@@ -51,7 +51,7 @@
 #define configUSE_16_BIT_TICKS                  0
 
 #define configIDLE_SHOULD_YIELD                 1
-
+#define configUSE_CORE_AFFINITY                 1
 /* Synchronization Related */
 #define configUSE_MUTEXES                       1
 #define configUSE_RECURSIVE_MUTEXES             1
@@ -104,7 +104,7 @@
 /* SMP port only */
 #define configNUM_CORES                         2
 #define configTICK_CORE                         0
-#define configRUN_MULTIPLE_PRIORITIES           0
+#define configRUN_MULTIPLE_PRIORITIES           1
 
 /* RP2040 specific */
 #define configSUPPORT_PICO_SYNC_INTEROP         1

@@ -110,6 +110,7 @@ static QueueHandle_t xQueue = NULL;
 
 void main_blinky( void )
 {
+	TaskHandle_t RxHandle, TxHandle;
     printf(" Starting main_blinky.\n");
 
     /* Create the queue. */
@@ -124,9 +125,11 @@ void main_blinky( void )
 					configMINIMAL_STACK_SIZE, 			/* The size of the stack to allocate to the task. */
 					NULL, 								/* The parameter passed to the task - not used in this case. */
 					mainQUEUE_RECEIVE_TASK_PRIORITY, 	/* The priority assigned to the task. */
-					NULL );								/* The task handle is not required, so NULL is passed. */
+					&RxHandle );								/* The task handle is not required, so NULL is passed. */
 
-		xTaskCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, NULL );
+		xTaskCreate( prvQueueSendTask, "TX", configMINIMAL_STACK_SIZE, NULL, mainQUEUE_SEND_TASK_PRIORITY, &TxHandle );
+
+		vTaskCoreAffinitySet(TxHandle, (1 << 0));
 
 		/* Start the tasks and timer running. */
 		vTaskStartScheduler();
@@ -146,6 +149,7 @@ static void prvQueueSendTask( void *pvParameters )
 {
 TickType_t xNextWakeTime;
 const unsigned long ulValueToSend = 100UL;
+unsigned long ulCountOfItemsSentOnQueue = 0;
 
 	/* Remove compiler warning about unused parameter. */
 	( void ) pvParameters;
@@ -163,6 +167,7 @@ const unsigned long ulValueToSend = 100UL;
 		will not block - it shouldn't need to block as the queue should always
 		be empty at this point in the code. */
 		xQueueSend( xQueue, &ulValueToSend, 0U );
+		printf("SEND: Core %d - Thread '%s': Queue send %d\n", get_core_num(), pcTaskGetName(xTaskGetCurrentTaskHandle()), ++ulCountOfItemsSentOnQueue);
 	}
 }
 /*-----------------------------------------------------------*/
@@ -171,7 +176,7 @@ static void prvQueueReceiveTask( void *pvParameters )
 {
 unsigned long ulReceivedValue;
 const unsigned long ulExpectedValue = 100UL;
-
+unsigned long ulCountOfItemsRxOnQueue = 0;
 	/* Remove compiler warning about unused parameter. */
 	( void ) pvParameters;
 
@@ -188,6 +193,7 @@ const unsigned long ulExpectedValue = 100UL;
 		{
 			gpio_xor_mask( 1u << mainTASK_LED );
 			ulReceivedValue = 0U;
+			printf("SEND: Core %d - Thread '%s': Queue send %d\n", get_core_num(), pcTaskGetName(xTaskGetCurrentTaskHandle()), ++ulCountOfItemsRxOnQueue);
 		}
 	}
 }
